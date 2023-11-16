@@ -46,25 +46,25 @@ This query plan is pretty simple to read and I want to look at something more co
 
 2. **Cost and Rows Estimate:**
 
-* **\`cost=0.00..100.00\`**: Estimated cost of the operation. Here, 0.00 is the start-up cost, and 100.00 is the total cost after completing the scan.
-* **\`rows=3000\`**: Estimated number of rows in the table.
-* **\`width=204\`**: Estimated average width of each row in bytes.
+* **cost=0.00..100.00**: Estimated cost of the operation. Here, 0.00 is the start-up cost, and 100.00 is the total cost after completing the scan.
+* **rows=3000**: Estimated number of rows in the table.
+* **width=204**: Estimated average width of each row in bytes.
 
 3. **Filter:**
 
-* **\`Filter: (age > 30)\`**: The filter condition applied to each row. Only rows where the age column is greater than 30 are selected.
+* **Filter: (age > 30)**: The filter condition applied to each row. Only rows where the age column is greater than 30 are selected.
 
 
 4. **Rows and Filtering:**
 
-* **\`Rows Removed by Filter: 2500\`**: Indicates that out of the estimated 3000 rows, 2500 were removed because they did not meet the filter condition.
-* **\`actual time=0.012..0.015\`**: The actual time taken to perform the scan and filter operation.
-* **\`rows=500\`**: Actual number of rows that met the filter condition.
+* **Rows Removed by Filter: 2500**: Indicates that out of the estimated 3000 rows, 2500 were removed because they did not meet the filter condition.
+* **actual time=0.012..0.015**: The actual time taken to perform the scan and filter operation.
+* **rows=500**: Actual number of rows that met the filter condition.
 
 5. **Planning and Execution Time:**
 
-* **\`Planning Time: 0.050 ms\`**: Time taken to plan the query execution.
-* **\`Execution Time: 0.030 ms\`**: Actual time taken to execute the query.
+* **Planning Time: 0.050 ms**: Time taken to plan the query execution.
+* **Execution Time: 0.030 ms**: Actual time taken to execute the query.
 
 
 ## Advanced Query Plans: Inside Out
@@ -290,7 +290,7 @@ So when postgres does a join it uses one of three strategies:
 2. **Merge Join**:
 
 * **Usage**: Effective for larger datasets where both join columns are indexed and sorted (or can be efficiently sorted).
-* **Performance**: It works by simultaneously iterating through both tables, which are sorted on the join columns (O8 (n log n) complexity).
+* **Performance**: It works by simultaneously iterating through both tables, which are sorted on the join columns (O(nlogn) complexity).
 * **Conditions**: Can be used with most operators, but best with the equality operator.
 
 3. **Hash Join**:
@@ -315,6 +315,3 @@ Postgres **[TOAST](https://www.postgresql.org/docs/current/storage-toast.html)**
 That leads me to **[JSONB](https://www.postgresql.org/docs/current/datatype-json.html)**. When people use jsonb they are generally storing a large amount of data, and even though they might be updating just one part of the json in the eyes of postgres they are updating the whole thing if it is stored using TOAST.
 
 A solution to this problem is just better database design. It might make sense to separate your jsonb data into a different reference table with a foreign key. And then you can write a query that filters down a large amount of data into a small amount of data, and afterwards joins with the data that contains the jsonb column.
-
-
-
