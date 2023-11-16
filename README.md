@@ -1,6 +1,6 @@
 # Optimizing SQL Queries
 
-I often see engineers instinctively adding an index whenever they encounter a slow query. However, this isn't always the right solution. Let's dive into a more nuanced approach to optimizing complex queries in PostgreSQL.
+I often see engineers instinctively adding an index whenever they encounter a slow query. However, this isn't always the right solution. Let's dive into a more nuanced approach to optimizing complex queries in postgres.
 
 
 ## Start with the Query Plan
@@ -33,7 +33,7 @@ The thing that probably jumps out to you is the execution time and the costs.
 
 [Costs in a query plan are relative measures, not absolute.](https://www.postgresql.org/docs/current/runtime-config-query.html#RUNTIME-CONFIG-QUERY-CONSTANTS) They help you understand the efficiency of different parts of your query. Also from the docs: a sequential page read is 1.0, a random page read is 4.0, processing a row is 0.1, etc.
 
-PostgreSQL calculates these costs based on the table's [STATISTICS](https://www.postgresql.org/docs/current/planner-stats.html), which are estimates of data distribution and are refreshed through [manual](https://www.postgresql.org/docs/current/routine-vacuuming.html#VACUUM-FOR-STATISTICS) or [auto-vacuum processes](https://www.postgresql.org/docs/current/routine-vacuuming.html#AUTOVACUUM). There is a formula that auto-vacuum follows and you can tune it with these two parameters:
+postgres calculates these costs based on the table's [STATISTICS](https://www.postgresql.org/docs/current/planner-stats.html), which are estimates of data distribution and are refreshed through [manual](https://www.postgresql.org/docs/current/routine-vacuuming.html#VACUUM-FOR-STATISTICS) or [auto-vacuum processes](https://www.postgresql.org/docs/current/routine-vacuuming.html#AUTOVACUUM). There is a formula that auto-vacuum follows and you can tune it with these two parameters:
 
 - [autovacuum_vacuum_scale_factor](https://postgresqlco.nf/doc/en/param/autovacuum_vacuum_scale_factor/)
 - [autovacuum_vacuum_threshold](https://postgresqlco.nf/doc/en/param/autovacuum_vacuum_threshold/)
@@ -103,7 +103,7 @@ Planning Time: 0.200 ms
 Execution Time: 0.170 ms
 ```
 
-To understand this plan, start in the middle and work your way outwards, similar to reading Lisp code. This method reveals how PostgreSQL transforms your SQL query into an executable plan.
+To understand this plan, start in the middle and work your way outwards, similar to reading Lisp code. This method reveals how postgres transforms your SQL query into an executable plan.
 The limit is actually the last thing that happens. The first thing that happens is a sequential scan on **\`departments\`**. Let's just go through this step by step.
 
 1. **Seq Scan on departments**: The database starts by scanning the departments table.
@@ -124,7 +124,7 @@ The limit is actually the last thing that happens. The first thing that happens 
 
 So how do we conceptualize a sql query to a query plan. I think [this article](https://dev.to/kanani_nirav/secret-to-optimizing-sql-queries-understand-the-sql-execution-order-28m1) does a great job.
 
-<img src="https://res.cloudinary.com/practicaldev/image/fetch/s--NMQWtlld--/c_limit%2Cf_auto%2Cfl_progressive%2Cq_auto%2Cw_800/https://dev-to-uploads.s3.amazonaws.com/uploads/articles/q3jd9vgyghf0keq7tm1i.jpeg" alt="diagram" width="400"  />
+<img src="https://res.cloudinary.com/practicaldev/image/fetch/s--NMQWtlld--/c_limit%2Cf_auto%2Cfl_progressive%2Cq_auto%2Cw_800/https://dev-to-uploads.s3.amazonaws.com/uploads/articles/q3jd9vgyghf0keq7tm1i.jpeg" alt="diagram" height="500"  />
 
 I will say a query plan may apply WHERE clauses before joins, and you want to reduce the amount of data you are joining with by as much as possible. So this isn't completely accurate and that is something to look at for in your query plan.
 
@@ -175,7 +175,7 @@ Execution Time: 0.049 ms
 
 So the key part of this plan is **\`Buffers: shared hit=4\`**.
 
-* **Shared**: Refers to shared buffers, which is PostgreSQL's cache for table and index data.
+* **Shared**: Refers to shared buffers, which is postgres's cache for table and index data.
 * **Hit**: Indicates that the required data was found in the shared buffer (cache) and did not require a disk read.
 * **4**: The number of blocks in the shared buffer that were hit. This gives an idea of how much data was read from the cache.
 
@@ -183,7 +183,7 @@ So there are a few things going on here. Let's break them down:
 
 1. **Cache Efficiency**: The fact that the data was found in the shared buffer (cache hit) and no read from disk was required (hit=4) indicates good cache efficiency. This reduces IO demand and speeds up query execution.
 2. **Index Usage**: Utilization of an index, as seen in the plan, typically reduces the amount of IO needed as the database can quickly locate the desired rows without scanning the entire table.
-3. **Buffer Hits vs Reads**: If there were disk reads, the plan would show read alongside hit. A higher number of reads might suggest the need for more memory allocation to PostgreSQL or adjustments in query/index design to improve cache usage.
+3. **Buffer Hits vs Reads**: If there were disk reads, the plan would show read alongside hit. A higher number of reads might suggest the need for more memory allocation to postgres or adjustments in query/index design to improve cache usage.
 
 So this leads us back to where we started. Indexes. But first some heuristics on when you might run into a large amount of IO in a query
 
@@ -207,11 +207,11 @@ Some easy ways to fix this issue?
 
 ## When to Consider Indexes
 
-Before adding indexes, it's essential to determine if they are necessary. PostgreSQL often knows the best index type, with B-tree being the most common. There are a [whole host of them though](https://www.postgresql.org/docs/current/indexes-types.html). B-Tree is very versatile since it can be used for `=`, `>`, `<`, etc. Hash index can only be used for `=`. The other indexes are more niche, like the GIN index that you might use for text search.
+Before adding indexes, it's essential to determine if they are necessary. postgres often knows the best index type, with B-tree being the most common. There are a [whole host of them though](https://www.postgresql.org/docs/current/indexes-types.html). B-Tree is very versatile since it can be used for `=`, `>`, `<`, etc. Hash index can only be used for `=`. The other indexes are more niche, like the GIN index that you might use for text search.
 
 Let's say you have a B-tree index and postgres uses it. What does that mean? Well a B-tree is essentially the opposite of a binary tree where instead of extremely slender it is very bushy. And it is a denormalization of your data in a data structure that you can traverse without much IO. The nodes are pointers that tell you where the rowId you are looking for is... and the leafnode is a pointer to the table within the database that actually has your row data.
 
-<img src="https://www-cdn.qwertee.io/media/uploads/btree.png" alt="diagram" width="400" style="background-color: white;" />
+<img src="https://www-cdn.qwertee.io/media/uploads/btree.png" alt="diagram" height="400" style="background-color: white;" />
 
 
 As mentioned, indexes are a form of denormalization. So the tradeoff here is that for writes you are making multiple writes (to your table but also to all effected indexes).
@@ -274,7 +274,7 @@ Well to begin with think of a bitmap as an array of yes and nos.
 
 <img src="https://i.pinimg.com/originals/81/8a/37/818a37f497a2affc05cee3125b42a06d.png" alt="diagram" height="400" />
 
-A bitmap index scan typically occurs when there's an efficient index to use, but the index doesn't necessarily narrow down to a very small number of rows. It's a way for PostgreSQL to efficiently handle situations where multiple rows need to be fetched based on an index.
+A bitmap index scan typically occurs when there's an efficient index to use, but the index doesn't necessarily narrow down to a very small number of rows. It's a way for postgres to efficiently handle situations where multiple rows need to be fetched based on an index.
 
 
 ## Join Strategies and Performance
