@@ -231,7 +231,7 @@ Let's say you have a B-tree index and postgres uses it. What does that mean? Wel
 
 As mentioned, indexes are a form of denormalization. So the tradeoff here is that for writes you are making multiple writes (to your table but also to all effected indexes).
 
-Here are some general heursitics to use when deciding what to index. I do want to say outside of FKs I generally wait to see if I really need an index by running this query:
+I do want to say outside of FKs I generally wait to see if I really need an index by running this query:
 
 ```sql
 SELECT
@@ -243,7 +243,7 @@ SELECT
       ORDER BY too_much_seq DESC;
 ```
 
-Anyway back to the heuristics. Emphasis on compound indexes since those are more tricky:
+Here are some general heursitics to use when deciding what to index. Emphasis on compound indexes since those are more tricky:
 
 1. **Large sequential Scans**
 
@@ -255,7 +255,7 @@ Anyway back to the heuristics. Emphasis on compound indexes since those are more
 * **Order By and Group By**: Consider columns used in ORDER BY and GROUP BY clauses.
   
 3. **Selectivity**
-* High Selectivity First: Place columns with high selectivity (i.e., columns with a wide range of unique values) at the beginning of the index. High selectivity columns help narrow down the result set more effectively.
+* **High Selectivity First**: Place columns with high selectivity (i.e., columns with a wide range of unique values) at the beginning of the index. High selectivity columns help narrow down the result set more effectively.
 
 4. **Query Patterns**
 * **Common Column Combinations**: Analyze your query patterns. If certain columns often appear together in queries, they are good candidates for a compound index.
@@ -264,11 +264,11 @@ Anyway back to the heuristics. Emphasis on compound indexes since those are more
 * **Order Matters**: The order of columns in a compound index is crucial. The index can only be used effectively if the query's conditions match the prefix of the index. For example, in an index on (col1, col2, col3), the index is most effective if col1, or col1 and col2, or all three columns are used in the query.
 
 6. **Balancing Performance and Maintenance**
-* Write Performance: More indexes can slow down write operations (INSERT, UPDATE, DELETE) as each index must be updated. Balance the need for read optimization with the potential impact on write performance.
-* Index Size: Compound indexes are larger than single-column indexes. Ensure that the increased disk space usage and memory footprint are justified by the performance gains.
+* **Write Performance**: More indexes can slow down write operations (INSERT, UPDATE, DELETE) as each index must be updated. Balance the need for read optimization with the potential impact on write performance.
+* **Index Size**: Compound indexes are larger than single-column indexes. Ensure that the increased disk space usage and memory footprint are justified by the performance gains.
 
 7. **Covering Indexes**
-* Include Non-Filtered Columns: If a query frequently selects specific columns, consider including these in the index even if they are not used in filtering. This creates a covering index, allowing the query to be satisfied entirely from the index without accessing the table.
+* **Include Non-Filtered Columns**: If a query frequently selects specific columns, consider including these in the index even if they are not used in filtering. This creates a covering index, allowing the query to be satisfied entirely from the index without accessing the table.
 
 8. **Avoid Redundant Indexes**
 * If you create a compound index on (col1, col2), it can serve queries filtering on col1 alone but not col2 alone. Be mindful of existing indexes to avoid redundancy.
