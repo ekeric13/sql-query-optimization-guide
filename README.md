@@ -219,7 +219,13 @@ As mentioned, indexes are a form of denormalization. So the tradeoff here is tha
 Here are some general heursitics to use when deciding what to index. I do want to say outside of FKs I generally wait to see if I really need an index by running this query:
 
 ```sql
-SELECT relname, seq_scan-idx_scan AS too_much_seq, case when seq_scan-idx_scan>0 THEN 'Missing Index?' ELSE 'OK' END, pg_relation_size(relid::regclass) AS rel_size, seq_scan, idx_scan FROM pg_stat_all_tables WHERE schemaname='public' AND pg_relation_size(relid::regclass)>80000 ORDER BY too_much_seq DESC;
+SELECT
+  relname, seq_scan-idx_scan AS too_much_seq,
+  case when seq_scan-idx_scan>0 THEN 'Missing Index?' ELSE 'OK' END,
+  pg_relation_size(relid::regclass) AS rel_size, seq_scan, idx_scan
+    FROM pg_stat_all_tables
+    WHERE schemaname='public' AND pg_relation_size(relid::regclass)>80000
+      ORDER BY too_much_seq DESC;
 ```
 
 Anyway back to the heuristics. Emphasis on compound indexes since those are more tricky:
