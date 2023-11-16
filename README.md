@@ -2,6 +2,21 @@
 
 I often see engineers instinctively adding an index whenever they encounter a slow query. However, this isn't always the right solution. Let's dive into a more nuanced approach to optimizing complex queries in postgres.
 
+## Table of Contents
+
+- [Optimizing SQL Queries](#optimizing-sql-queries)
+  - [Table of Contents](#table-of-contents)
+  - [Start with the Query Plan](#start-with-the-query-plan)
+  - [Understanding Basic Query Plans](#understanding-basic-query-plans)
+  - [Advanced Query Plans: Inside Out](#advanced-query-plans-inside-out)
+  - [Mapping SQL Queries to Query Plans](#mapping-sql-queries-to-query-plans)
+  - [Debugging Complex Query Plans](#debugging-complex-query-plans)
+  - [Understanding IO in SQL Query Execution](#understanding-io-in-sql-query-execution)
+  - [When to Consider Indexes](#when-to-consider-indexes)
+  - [Join Strategies and Performance](#join-strategies-and-performance)
+  - [JSONB and TOAST](#jsonb-and-toast)
+
+
 
 ## Start with the Query Plan
 
