@@ -48,7 +48,7 @@ The thing that probably jumps out to you is the execution time and the costs.
 
 [Costs in a query plan are relative measures, not absolute.](https://www.postgresql.org/docs/current/runtime-config-query.html#RUNTIME-CONFIG-QUERY-CONSTANTS) They help you understand the efficiency of different parts of your query. Also from the docs: a sequential page read is 1.0, a random page read is 4.0, processing a row is 0.1, etc.
 
-postgres calculates these costs based on the table's [STATISTICS](https://www.postgresql.org/docs/current/planner-stats.html), which are estimates of data distribution and are refreshed through [manual](https://www.postgresql.org/docs/current/routine-vacuuming.html#VACUUM-FOR-STATISTICS) or [auto-vacuum processes](https://www.postgresql.org/docs/current/routine-vacuuming.html#AUTOVACUUM). There is a formula that auto-vacuum follows and you can tune it with these two parameters:
+postgres calculates these costs based on the table's [STATISTICS](https://www.postgresql.org/docs/current/planner-stats.html), which are estimates of data distribution and are refreshed through [manual](https://www.postgresql.org/docs/current/routine-vacuuming.html#VACUUM-FOR-STATISTICS) or [auto-vacuum processes](https://www.postgresql.org/docs/current/routine-vacuuming.html#AUTOVACUUM). There is a formula that auto-vacuum follows (`vacuum threshold = vacuum base threshold + vacuum scale factor * number of tuples`) and you can tune it with these two parameters:
 
 - [autovacuum_vacuum_scale_factor](https://postgresqlco.nf/doc/en/param/autovacuum_vacuum_scale_factor/)
 - [autovacuum_vacuum_threshold](https://postgresqlco.nf/doc/en/param/autovacuum_vacuum_threshold/)
@@ -139,7 +139,7 @@ The limit is actually the last thing that happens. The first thing that happens 
 
 So how do we conceptualize a sql query to a query plan. I think [this article](https://dev.to/kanani_nirav/secret-to-optimizing-sql-queries-understand-the-sql-execution-order-28m1) does a great job.
 
-<img src="https://res.cloudinary.com/practicaldev/image/fetch/s--NMQWtlld--/c_limit%2Cf_auto%2Cfl_progressive%2Cq_auto%2Cw_800/https://dev-to-uploads.s3.amazonaws.com/uploads/articles/q3jd9vgyghf0keq7tm1i.jpeg" alt="diagram" height="500"  />
+<img src="https://github.com/ekeric13/sql-query-optimization-guide/assets/6489651/7d80c226-b1de-4d49-8617-f2b6ce31c608" alt="diagram" height="500"  />
 
 I will say a query plan may apply WHERE clauses before joins, and you want to reduce the amount of data you are joining with by as much as possible. So this isn't completely accurate and that is something to look at for in your query plan.
 
@@ -226,7 +226,7 @@ Before adding indexes, it's essential to determine if they are necessary. postgr
 
 Let's say you have a B-tree index and postgres uses it. What does that mean? Well a B-tree is essentially the opposite of a binary tree where instead of extremely slender it is very bushy. And it is a denormalization of your data in a data structure that you can traverse without much IO. The nodes are pointers that tell you where the rowId you are looking for is... and the leafnode is a pointer to the table within the database that actually has your row data.
 
-<img src="https://www-cdn.qwertee.io/media/uploads/btree.png" alt="diagram" height="400" style="background-color: white;" />
+<img src="https://github.com/ekeric13/sql-query-optimization-guide/assets/6489651/8c2ebe7c-9d7b-48b9-aa25-50d8d2a098de" alt="diagram" height="350" style="background-color: white;" />
 
 
 As mentioned, indexes are a form of denormalization. So the tradeoff here is that for writes you are making multiple writes (to your table but also to all effected indexes).
@@ -293,7 +293,7 @@ What is going on with this bitmap stuff?
 
 Well to begin with think of a bitmap as an array of yes and nos.
 
-<img src="https://i.pinimg.com/originals/81/8a/37/818a37f497a2affc05cee3125b42a06d.png" alt="diagram" height="400" />
+<img src="https://github.com/ekeric13/sql-query-optimization-guide/assets/6489651/ef52b52a-a496-4e9e-a7c0-ea8ac461ee0e" alt="diagram" height="350" />
 
 A bitmap index scan typically occurs when there's an efficient index to use, but the index doesn't necessarily narrow down to a very small number of rows. It's a way for postgres to efficiently handle situations where multiple rows need to be fetched based on an index.
 
